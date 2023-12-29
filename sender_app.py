@@ -50,7 +50,8 @@ class SenderApp(QWidget):
         packet_size = len(message) // num_packets
         packets = [message[i:i + packet_size] for i in range(0, len(message), packet_size)]
 
-        for packet in packets:
+        for i, packet in enumerate(packets, start=1):
+            print(f'Packet {i}/{len(packets)}: {packet}')  # Display the packet in the console
             self.socket.write(packet.encode())
 
     def generate_random_message(self):
