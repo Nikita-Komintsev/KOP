@@ -10,6 +10,9 @@ class ReceiverApp(QWidget):
 
         self.initUI()
 
+        self.expected_packets = 0
+        self.received_packets = []
+
     def initUI(self):
         self.message_label = QLabel('Полученные сообщения:')
         self.message_display = QLabel()
@@ -40,10 +43,7 @@ class ReceiverApp(QWidget):
     def receive_data(self):
         client_socket = self.sender()
         data = client_socket.readAll().data().decode()
-
-        if random.randint(1, 100) > self.loss_percentage:  # Моделирование потерь пакетов
-            current_text = self.message_display.text()
-            self.message_display.setText(f'{current_text}\n{data}')
+        print(data)
 
     def set_loss_percentage(self):
         try:
