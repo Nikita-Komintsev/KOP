@@ -1,8 +1,9 @@
 # receiver_app.py
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QSpinBox
 from PyQt5.QtNetwork import QTcpServer, QTcpSocket, QHostAddress
 import random
+
 
 class ReceiverApp(QWidget):
     def __init__(self):
@@ -12,12 +13,13 @@ class ReceiverApp(QWidget):
 
         self.expected_packets = 0
         self.received_packets = []
+        self.loss_percentage = 0
 
     def initUI(self):
         self.message_label = QLabel('Полученные сообщения:')
         self.message_display = QLabel()
         self.loss_percentage_label = QLabel('Процент потерь пакетов:')
-        self.loss_percentage_edit = QLineEdit()
+        self.loss_percentage_spinbox = QSpinBox()
         self.set_loss_percentage_button = QPushButton('Установить процент потерь')
         self.loss_percentage = 0
 
@@ -25,12 +27,16 @@ class ReceiverApp(QWidget):
         layout.addWidget(self.message_label)
         layout.addWidget(self.message_display)
         layout.addWidget(self.loss_percentage_label)
-        layout.addWidget(self.loss_percentage_edit)
+        layout.addWidget(self.loss_percentage_spinbox)
         layout.addWidget(self.set_loss_percentage_button)
 
         self.setLayout(layout)
 
         self.set_loss_percentage_button.clicked.connect(self.set_loss_percentage)
+
+        # Устанавливаем диапазон значений для QSpinBox
+        self.loss_percentage_spinbox.setRange(0, 100)
+        self.loss_percentage_spinbox.setValue(self.loss_percentage)
 
         self.server = QTcpServer(self)
         self.server.listen(QHostAddress('127.0.0.1'), 12345)  # Указать IP-адрес и порт
@@ -46,11 +52,8 @@ class ReceiverApp(QWidget):
         print(data)
 
     def set_loss_percentage(self):
-        try:
-            self.loss_percentage = int(self.loss_percentage_edit.text())
-            self.loss_percentage_label.setText(f'Процент потерь пакетов: {self.loss_percentage}%')
-        except ValueError:
-            self.loss_percentage_label.setText('Введите корректное значение')
+        self.loss_percentage = self.loss_percentage_spinbox.value()
+        self.loss_percentage_label.setText(f'Процент потерь пакетов: {self.loss_percentage}%')
 
     def closeEvent(self, event):
         # Метод, вызываемый при закрытии окна
