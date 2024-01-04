@@ -3,6 +3,8 @@ import json
 import random
 import string
 import sys
+import time
+
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QSpinBox
 from PyQt5.QtNetwork import QTcpSocket
 
@@ -14,6 +16,8 @@ class SenderApp(QWidget):
         self.initUI()
 
     def initUI(self):
+        self.setWindowTitle('sender')
+        self.resize(400, 300)
         self.message_label = QLabel('Введите сообщение:')
         self.message_edit = QLineEdit()
         self.num_packets_label = QLabel('Количество пакетов:')
@@ -39,10 +43,21 @@ class SenderApp(QWidget):
         self.generate_button.clicked.connect(self.generate_random_message)
         self.sequence_button.clicked.connect(self.request_sequence)
 
+        try:
+            # Пытаемся подключиться с повторными попытками
+            while not self.connect_to_server():
+                print("Не удалось подключиться. Повторная попытка через 5 секунд.")
+                time.sleep(5)
+        except KeyboardInterrupt:
+            print("Соединение закрыто.")
+
+    def connect_to_server(self):
         self.socket = QTcpSocket(self)
         self.socket.connectToHost('127.0.0.1', 12345)  # Указать IP-адрес и порт второй программы
-        if not self.socket.waitForConnected(1000):
-            print('Не удалось подключиться к серверу.')
+        connected = self.socket.waitForConnected(1000)
+        if connected:
+            print("Успешное подключение.")
+        return connected
 
     def send_message(self):
         message = self.message_edit.text()
