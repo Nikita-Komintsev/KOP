@@ -1,9 +1,11 @@
 # sender_app.py
+import json
 import random
 import string
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QSpinBox
 from PyQt5.QtNetwork import QTcpSocket
+
 
 class SenderApp(QWidget):
     def __init__(self):
@@ -46,16 +48,26 @@ class SenderApp(QWidget):
         message = self.message_edit.text()
         num_packets = self.num_packets_spinbox.value()
 
-        # Разделяем сообщение на указанное количество пакетов
+        # Рассчитываем размер пакета и остаток
         packet_size = len(message) // num_packets
-        packets = [message[i:i + packet_size] for i in range(0, len(message), packet_size)]
+        remainder = len(message) % num_packets
+        # Формируем пакеты с учетом остатка
+        packets = []
+        start = 0
+        for i in range(num_packets):
+            end = start + packet_size + (1 if i < remainder else 0)
+            packets.append(message[start:end])
+            start = end
+
+        # Отправляем все пакеты в виде массива (используя JSON)
+        data_to_send = json.dumps(packets)
 
         for i, packet in enumerate(packets, start=1):
             print(f'Packet {i}/{len(packets)}: {packet}')  # Display the packet in the console
-            self.socket.write(packet.encode())
+        self.socket.write(data_to_send.encode())
 
     def generate_random_message(self):
-        message = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        message = ''.join(random.choices(string.ascii_letters + string.digits, k=15))
         self.message_edit.setText(message)
 
     def request_sequence(self):
