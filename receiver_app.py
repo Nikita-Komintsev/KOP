@@ -1,4 +1,5 @@
 # receiver_app.py
+import json
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QLineEdit, QPushButton, QSpinBox
 from PyQt5.QtNetwork import QTcpServer, QTcpSocket, QHostAddress
@@ -16,6 +17,8 @@ class ReceiverApp(QWidget):
         self.loss_percentage = 0
 
     def initUI(self):
+        self.setWindowTitle('receiver')
+        self.resize(400, 300)
         self.message_label = QLabel('Полученные сообщения:')
         self.message_display = QLabel()
         self.loss_percentage_label = QLabel('Процент потерь пакетов:')
@@ -49,7 +52,16 @@ class ReceiverApp(QWidget):
     def receive_data(self):
         client_socket = self.sender()
         data = client_socket.readAll().data().decode()
-        print(data)
+        packets = json.loads(data)  # Предполагается, что данные приходят в формате JSON
+        valid_packets = []
+        for packet in packets:
+            if random.randint(1, 100) > self.loss_percentage:  # Проверка потери пакета
+                valid_packets.append(packet)
+            else:print("loss - ", packet)
+        print("Received packets:", valid_packets)
+
+        current_text = self.message_display.text()
+        self.message_display.setText(f'{current_text}\n{"".join(valid_packets)}')
 
     def set_loss_percentage(self):
         self.loss_percentage = self.loss_percentage_spinbox.value()
